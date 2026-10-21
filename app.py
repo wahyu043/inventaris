@@ -23,6 +23,19 @@ def login_required(view):
 def index():
     return render_template("index.html")
 
+@app.route("/barang")
+@login_required
+def barang():
+    rows = db.get_db().execute("""
+        SELECT b.kode, b.nama,
+               COALESCE(SUM(CASE WHEN t.jenis = 'Masuk' THEN t.jumlah ELSE -t.jumlah END), 0) AS stok
+        FROM barang b
+        LEFT JOIN transaksi t ON t.kode_barang = b.kode
+        GROUP BY b.kode, b.nama
+        ORDER BY b.nama
+    """).fetchall()
+    return render_template("barang.html", rows=rows)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
