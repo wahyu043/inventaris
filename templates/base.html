@@ -12,6 +12,9 @@
   </style>
 </head>
 <body>
+  {% if session.user_id %}
+  <nav><a href="{{ url_for('index') }}">Dashboard</a> | <a href="{{ url_for('barang') }}">Barang</a> | <a href="{{ url_for('logout') }}">Logout</a></nav>
+  {% endif %}
   {% for m in get_flashed_messages() %}<p class="flash">{{ m }}</p>{% endfor %}
   {% block content %}{% endblock %}
 </body>
