@@ -3,9 +3,9 @@
 {% block content %}
 <h1>Master Barang</h1>
 <table border="1" cellpadding="6" cellspacing="0">
-  <tr><th>Kode</th><th>Nama Barang</th><th>Stok</th></tr>
+  <tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Stok</th></tr>
   {% for r in rows %}
-  <tr><td>{{ r.kode }}</td><td>{{ r.nama }}</td><td>{{ r.stok }}</td></tr>
+  <tr><td>{{ loop.index }}</td><td>{{ r.kode }}</td><td>{{ r.nama }}</td><td>{{ r.stok }}</td></tr>
   {% endfor %}
 </table>
 {% endblock %}
