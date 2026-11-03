@@ -9,13 +9,14 @@
     a, h1 { color:#64ffda; }
     input, button { font:inherit; padding:8px; margin:4px 0; }
     .flash { color:#ff6b6b; }
+    .flash.ok { color:#64ffda; }
   </style>
 </head>
 <body>
   {% if session.user_id %}
-  <nav><a href="{{ url_for('index') }}">Dashboard</a> | <a href="{{ url_for('barang') }}">Barang</a> | <a href="{{ url_for('logout') }}">Logout</a></nav>
+  <nav><a href="{{ url_for('index') }}">Dashboard</a> | <a href="{{ url_for('barang') }}">Barang</a> | <a href="{{ url_for('masuk_list') }}">Barang Masuk</a> | <a href="{{ url_for('logout') }}">Logout</a></nav>
   {% endif %}
-  {% for m in get_flashed_messages() %}<p class="flash">{{ m }}</p>{% endfor %}
+  {% for kategori, m in get_flashed_messages(with_categories=true) %}<p class="flash {{ kategori }}">{{ m }}</p>{% endfor %}
   {% block content %}{% endblock %}
 </body>
 </html>
