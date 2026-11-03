@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Barang Masuk{% endblock %}
+{% block content %}
+<h1>Barang Masuk</h1>
+<p><a href="{{ url_for('masuk_tambah') }}">+ Tambah barang masuk</a></p>
+<table border="1" cellpadding="6" cellspacing="0">
+  <tr><th>No</th><th>Tanggal</th><th>Kode</th><th>Nama Barang</th><th>Jumlah</th><th>No. Faktur</th><th>Aksi</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ r.tanggal }}</td>
+    <td>{{ r.kode_barang }}</td>
+    <td>{{ r.nama }}</td>
+    <td>{{ r.jumlah }}</td>
+    <td>{{ r.no_faktur or '' }}</td>
+    <td>
+      <a href="{{ url_for('masuk_ubah', id=r.id) }}">Ubah</a>
+      <form method="post" action="{{ url_for('masuk_hapus', id=r.id) }}" style="display:inline"
+            onsubmit="return confirm('Hapus data ini?')">
+        <button>Hapus</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
