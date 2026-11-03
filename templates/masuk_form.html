@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Ubah' if data else 'Tambah' }} Barang Masuk{% endblock %}
+{% block content %}
+<h1>{{ 'Ubah' if data else 'Tambah' }} Barang Masuk</h1>
+<form method="post">
+  <p><label>Tanggal<br>
+    <input type="date" name="tanggal" value="{{ data.tanggal if data else hari_ini }}" required>
+  </label></p>
+
+  <p><label>Barang<br>
+  {% if data %}
+    <input value="{{ data.kode_barang }} - {{ data.nama }}" disabled>
+  {% else %}
+    <select name="kode_barang" required>
+      {% for b in daftar_barang %}
+      <option value="{{ b.kode }}">{{ b.kode }} - {{ b.nama }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+  </label></p>
+
+  <p><label>Jumlah<br>
+    <input type="number" name="jumlah" min="1" value="{{ data.jumlah if data else '' }}" required>
+  </label></p>
+
+  <p><label>No. Faktur (opsional)<br>
+    <input name="no_faktur" value="{{ (data.no_faktur or '') if data else '' }}">
+  </label></p>
+
+  <button>Simpan</button> <a href="{{ url_for('masuk_list') }}">Batal</a>
+</form>
+{% endblock %}
