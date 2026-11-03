@@ -20,6 +20,15 @@ def close_db(e=None):
     if conn is not None:
         conn.close()
 
+def stok_barang(kode):
+    """Stok saat ini = total masuk - total keluar."""
+    row = get_db().execute(
+        "SELECT COALESCE(SUM(CASE WHEN jenis = 'Masuk' THEN jumlah ELSE -jumlah END), 0) AS stok "
+        "FROM transaksi WHERE kode_barang = ?",
+        (kode,),
+    ).fetchone()
+    return row["stok"]
+
 
 @click.command("init-db")
 def init_db_command():
