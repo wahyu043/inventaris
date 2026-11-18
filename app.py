@@ -134,6 +134,107 @@ def masuk_hapus(id):
     return redirect(url_for("masuk_list"))
 
 
+@app.route("/keluar")
+@login_required
+def keluar_list():
+    rows = db.get_db().execute("""
+        SELECT t.id, t.tanggal, t.kode_barang, b.nama, t.jumlah, t.no_faktur
+        FROM transaksi t
+        JOIN barang b ON b.kode = t.kode_barang
+        WHERE t.jenis = 'Keluar'
+        ORDER BY t.tanggal DESC, t.id DESC
+    """).fetchall()
+    return render_template("keluar_list.html", rows=rows)
+
+
+def ambil_keluar(id):
+    """Ambil 1 transaksi keluar, atau tampilkan 404 kalau tidak ada."""
+    row = db.get_db().execute(
+        "SELECT t.*, b.nama FROM transaksi t JOIN barang b ON b.kode = t.kode_barang "
+        "WHERE t.id = ? AND t.jenis = 'Keluar'", (id,)
+    ).fetchone()
+    if row is None:
+        abort(404)
+    return row
+
+
+@app.route("/keluar/tambah", methods=["GET", "POST"])
+@login_required
+def keluar_tambah():
+    conn = db.get_db()
+    daftar_barang = conn.execute("SELECT kode, nama FROM barang ORDER BY nama").fetchall()
+
+    if request.method == "POST":
+        tanggal = request.form["tanggal"]
+        kode = request.form["kode_barang"]
+        no_faktur = request.form["no_faktur"].strip() or None
+        try:
+            jumlah = int(request.form["jumlah"])
+        except ValueError:
+            jumlah = 0
+
+        barang = conn.execute("SELECT 1 FROM barang WHERE kode = ?", (kode,)).fetchone()
+        if not tanggal or jumlah <= 0:
+            flash("Tanggal wajib diisi dan jumlah harus lebih dari 0", "error")
+        elif not barang:
+            flash("Barang tidak ditemukan", "error")
+        elif db.stok_barang(kode) < jumlah:
+            flash("Ditolak: jumlah melebihi stok barang", "error")
+        else:
+            conn.execute(
+                "INSERT INTO transaksi (tanggal, jenis, kode_barang, jumlah, no_faktur) "
+                "VALUES (?, 'Keluar', ?, ?, ?)",
+                (tanggal, kode, jumlah, no_faktur),
+            )
+            conn.commit()
+            flash("Barang keluar berhasil ditambahkan", "ok")
+            return redirect(url_for("keluar_list"))
+
+    return render_template("keluar_form.html", daftar_barang=daftar_barang,
+                           data=None, hari_ini=date.today().isoformat())
+
+
+@app.route("/keluar/<int:id>/ubah", methods=["GET", "POST"])
+@login_required
+def keluar_ubah(id):
+    data = ambil_keluar(id)
+
+    if request.method == "POST":
+        tanggal = request.form["tanggal"]
+        no_faktur = request.form["no_faktur"].strip() or None
+        try:
+            jumlah = int(request.form["jumlah"])
+        except ValueError:
+            jumlah = 0
+
+        if not tanggal or jumlah <= 0:
+            flash("Tanggal wajib diisi dan jumlah harus lebih dari 0", "error")
+        elif db.stok_barang(data["kode_barang"]) + data["jumlah"] < jumlah:
+            flash("Ditolak: jumlah melebihi stok barang", "error")
+        else:
+            conn = db.get_db()
+            conn.execute(
+                "UPDATE transaksi SET tanggal = ?, jumlah = ?, no_faktur = ? WHERE id = ?",
+                (tanggal, jumlah, no_faktur, id),
+            )
+            conn.commit()
+            flash("Barang keluar berhasil diubah", "ok")
+            return redirect(url_for("keluar_list"))
+
+    return render_template("keluar_form.html", data=data, daftar_barang=[], hari_ini="")
+
+
+@app.route("/keluar/<int:id>/hapus", methods=["POST"])
+@login_required
+def keluar_hapus(id):
+    ambil_keluar(id)
+    conn = db.get_db()
+    conn.execute("DELETE FROM transaksi WHERE id = ?", (id,))
+    conn.commit()
+    flash("Barang keluar berhasil dihapus", "ok")
+    return redirect(url_for("keluar_list"))
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
