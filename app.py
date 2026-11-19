@@ -22,7 +22,36 @@ def login_required(view):
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    conn = db.get_db()
+    ringkasan = conn.execute("""
+        SELECT
+            COUNT(DISTINCT b.kode) AS total_jenis_barang,
+            COUNT(t.id) AS total_transaksi,
+            COALESCE(SUM(CASE
+                WHEN t.jenis = 'Masuk' THEN t.jumlah
+                WHEN t.jenis = 'Keluar' THEN -t.jumlah
+                ELSE 0
+            END), 0) AS total_stok
+        FROM barang b
+        LEFT JOIN transaksi t ON t.kode_barang = b.kode
+    """).fetchone()
+    batas_stok_rendah = 5
+    stok_rendah = conn.execute("""
+        SELECT b.kode, b.nama,
+               COALESCE(SUM(CASE
+                   WHEN t.jenis = 'Masuk' THEN t.jumlah
+                   WHEN t.jenis = 'Keluar' THEN -t.jumlah
+                   ELSE 0
+               END), 0) AS stok
+        FROM barang b
+        LEFT JOIN transaksi t ON t.kode_barang = b.kode
+        GROUP BY b.kode, b.nama
+        HAVING stok <= ?
+        ORDER BY stok, b.nama
+    """, (batas_stok_rendah,)).fetchall()
+    return render_template("index.html", ringkasan=ringkasan,
+                           stok_rendah=stok_rendah,
+                           batas_stok_rendah=batas_stok_rendah)
 
 @app.route("/barang")
 @login_required
