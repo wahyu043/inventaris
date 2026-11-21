@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS barang (
     kode TEXT PRIMARY KEY,
-    nama TEXT NOT NULL
+    nama TEXT NOT NULL,
+    aktif INTEGER NOT NULL DEFAULT 1 CHECK (aktif IN (0, 1))
 );
 
 CREATE TABLE IF NOT EXISTS transaksi (

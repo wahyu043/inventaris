@@ -36,6 +36,10 @@ def init_db_command():
     conn = get_db()
     with open("schema.sql") as f:
         conn.executescript(f.read())
+    # Migrasi aman untuk database yang dibuat sebelum kolom status tersedia.
+    kolom_barang = {row["name"] for row in conn.execute("PRAGMA table_info(barang)")}
+    if "aktif" not in kolom_barang:
+        conn.execute("ALTER TABLE barang ADD COLUMN aktif INTEGER NOT NULL DEFAULT 1 CHECK (aktif IN (0, 1))")
     conn.execute(
         "INSERT OR IGNORE INTO users (username, password_hash) VALUES (?, ?)",
         ("admin", generate_password_hash("admin123", method="pbkdf2:sha256")),

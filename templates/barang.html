@@ -2,10 +2,17 @@
 {% block title %}Barang{% endblock %}
 {% block content %}
 <h1>Master Barang</h1>
+<p><a href="{{ url_for('barang_tambah') }}">+ Tambah Barang</a></p>
 <table border="1" cellpadding="6" cellspacing="0">
-  <tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Stok</th></tr>
+  <tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Stok</th><th>Status</th><th>Aksi</th></tr>
   {% for r in rows %}
-  <tr><td>{{ loop.index }}</td><td>{{ r.kode }}</td><td>{{ r.nama }}</td><td>{{ r.stok }}</td></tr>
+  <tr><td>{{ loop.index }}</td><td>{{ r.kode }}</td><td>{{ r.nama }}</td><td>{{ r.stok }}</td>
+    <td>{{ 'Aktif' if r.aktif else 'Nonaktif' }}</td>
+    <td><a href="{{ url_for('barang_ubah', kode=r.kode) }}">Ubah</a>
+      <form method="post" action="{{ url_for('barang_status', kode=r.kode) }}" style="display:inline">
+        <button>{{ 'Nonaktifkan' if r.aktif else 'Aktifkan' }}</button>
+      </form>
+    </td></tr>
   {% endfor %}
 </table>
 {% endblock %}

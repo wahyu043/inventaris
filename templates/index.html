@@ -1,6 +1,41 @@
 {% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
 {% block content %}
 <h1>Dashboard</h1>
-<p>Selamat datang. Menu menyusul di fitur berikutnya.</p>
-<a href="{{ url_for('logout') }}">Logout</a>
+<p>Ringkasan kondisi inventaris saat ini.</p>
+<section class="summary-grid" aria-label="Ringkasan inventaris">
+  <article class="summary-card">
+    <h2>Jenis Barang</h2>
+    <p class="summary-value">{{ ringkasan.total_jenis_barang }}</p>
+  </article>
+  <article class="summary-card">
+    <h2>Total Transaksi</h2>
+    <p class="summary-value">{{ ringkasan.total_transaksi }}</p>
+  </article>
+  <article class="summary-card">
+    <h2>Total Stok</h2>
+    <p class="summary-value">{{ ringkasan.total_stok }}</p>
+    <p class="summary-note">Unit dari seluruh barang</p>
+  </article>
+</section>
+
+<section aria-labelledby="stok-rendah-title">
+  <h2 id="stok-rendah-title">Perlu diperhatikan</h2>
+  <p>Barang dengan stok {{ batas_stok_rendah }} unit atau kurang.</p>
+  {% if stok_rendah %}
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead><tr><th>Kode</th><th>Nama Barang</th><th>Stok</th></tr></thead>
+    <tbody>
+      {% for barang in stok_rendah %}
+      <tr class="{% if barang.stok <= 0 %}stock-empty{% else %}stock-low{% endif %}">
+        <td>{{ barang.kode }}</td><td>{{ barang.nama }}</td><td>{{ barang.stok }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="stock-ok">Semua barang memiliki stok di atas batas minimum.</p>
+  {% endif %}
+  <p><a href="{{ url_for('barang') }}">Lihat semua barang</a></p>
+</section>
 {% endblock %}

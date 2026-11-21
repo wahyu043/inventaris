@@ -13,15 +13,19 @@ Format ini mengacu pada panduan [Keep a Changelog](https://keepachangelog.com/id
   - Validasi stok saat menambah dan mengubah transaksi agar stok tidak minus.
   - Fitur ubah dan hapus transaksi barang keluar.
   - Tautan menu navigasi "Barang Keluar".
+- **Ringkasan Dashboard**:
+  - Metrik jumlah jenis barang, jumlah transaksi, dan total stok saat ini.
+  - Daftar barang dengan stok 5 unit atau kurang, termasuk penanda stok habis.
 
 ### Rencana Pengembangan
-- **Peningkatan Dashboard (`/`)**:
-  - Ringkasan metrik inventaris (total jenis barang, total transaksi, total stok).
-  - Notifikasi / indikator visual untuk barang dengan stok minimum atau kritis.
-- **CRUD Master Barang**:
-  - Form penambahan, pengeditan data barang (kode & nama), serta penonaktifan barang secara langsung lewat antarmuka web tanpa bergantung pada impor Excel.
 - **Pengujian Otomatis (Automated Testing)**:
   - Implementasi pengujian unit dan integrasi (misalnya dengan `pytest` / `unittest`) untuk rute aplikasi, validasi alur transaksi, dan perhitungan stok.
+
+### Diubah
+- **CRUD Master Barang**:
+  - Menambahkan form tambah barang dan ubah nama barang melalui antarmuka web.
+  - Menambahkan aktivasi/nonaktivasi barang. Barang nonaktif tidak muncul pada pilihan transaksi baru, tetapi riwayat transaksi tetap tersimpan.
+  - Menambahkan migrasi kolom status yang tetap kompatibel dengan database lama saat menjalankan `flask init-db`.
 
 ---
 

@@ -22,13 +22,42 @@ def login_required(view):
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html")
+    conn = db.get_db()
+    ringkasan = conn.execute("""
+        SELECT
+            COUNT(DISTINCT b.kode) AS total_jenis_barang,
+            COUNT(t.id) AS total_transaksi,
+            COALESCE(SUM(CASE
+                WHEN t.jenis = 'Masuk' THEN t.jumlah
+                WHEN t.jenis = 'Keluar' THEN -t.jumlah
+                ELSE 0
+            END), 0) AS total_stok
+        FROM barang b
+        LEFT JOIN transaksi t ON t.kode_barang = b.kode
+    """).fetchone()
+    batas_stok_rendah = 5
+    stok_rendah = conn.execute("""
+        SELECT b.kode, b.nama,
+               COALESCE(SUM(CASE
+                   WHEN t.jenis = 'Masuk' THEN t.jumlah
+                   WHEN t.jenis = 'Keluar' THEN -t.jumlah
+                   ELSE 0
+               END), 0) AS stok
+        FROM barang b
+        LEFT JOIN transaksi t ON t.kode_barang = b.kode
+        GROUP BY b.kode, b.nama
+        HAVING stok <= ?
+        ORDER BY stok, b.nama
+    """, (batas_stok_rendah,)).fetchall()
+    return render_template("index.html", ringkasan=ringkasan,
+                           stok_rendah=stok_rendah,
+                           batas_stok_rendah=batas_stok_rendah)
 
 @app.route("/barang")
 @login_required
 def barang():
     rows = db.get_db().execute("""
-        SELECT b.kode, b.nama,
+        SELECT b.kode, b.nama, b.aktif,
                COALESCE(SUM(CASE WHEN t.jenis = 'Masuk' THEN t.jumlah ELSE -t.jumlah END), 0) AS stok
         FROM barang b
         LEFT JOIN transaksi t ON t.kode_barang = b.kode
@@ -36,6 +65,58 @@ def barang():
         ORDER BY b.nama
     """).fetchall()
     return render_template("barang.html", rows=rows)
+
+
+@app.route("/barang/tambah", methods=["GET", "POST"])
+@login_required
+def barang_tambah():
+    if request.method == "POST":
+        kode = request.form.get("kode", "").strip()
+        nama = request.form.get("nama", "").strip()
+        if not kode or not nama:
+            flash("Kode dan nama barang wajib diisi", "error")
+        elif db.get_db().execute("SELECT 1 FROM barang WHERE kode = ?", (kode,)).fetchone():
+            flash("Kode barang sudah digunakan", "error")
+        else:
+            conn = db.get_db()
+            conn.execute("INSERT INTO barang (kode, nama, aktif) VALUES (?, ?, 1)", (kode, nama))
+            conn.commit()
+            flash("Barang berhasil ditambahkan", "ok")
+            return redirect(url_for("barang"))
+    return render_template("barang_form.html", data=None)
+
+
+@app.route("/barang/<kode>/ubah", methods=["GET", "POST"])
+@login_required
+def barang_ubah(kode):
+    conn = db.get_db()
+    data = conn.execute("SELECT kode, nama FROM barang WHERE kode = ?", (kode,)).fetchone()
+    if data is None:
+        abort(404)
+    if request.method == "POST":
+        nama = request.form.get("nama", "").strip()
+        if not nama:
+            flash("Nama barang wajib diisi", "error")
+        else:
+            conn.execute("UPDATE barang SET nama = ? WHERE kode = ?", (nama, kode))
+            conn.commit()
+            flash("Nama barang berhasil diubah", "ok")
+            return redirect(url_for("barang"))
+    return render_template("barang_form.html", data=data)
+
+
+@app.route("/barang/<kode>/status", methods=["POST"])
+@login_required
+def barang_status(kode):
+    conn = db.get_db()
+    data = conn.execute("SELECT aktif FROM barang WHERE kode = ?", (kode,)).fetchone()
+    if data is None:
+        abort(404)
+    status = 0 if data["aktif"] else 1
+    conn.execute("UPDATE barang SET aktif = ? WHERE kode = ?", (status, kode))
+    conn.commit()
+    flash("Barang dinonaktifkan" if not status else "Barang diaktifkan kembali", "ok")
+    return redirect(url_for("barang"))
 
 @app.route("/masuk")
 @login_required
@@ -53,7 +134,7 @@ def masuk_list():
 @login_required
 def masuk_tambah():
     conn = db.get_db()
-    daftar_barang = conn.execute("SELECT kode, nama FROM barang ORDER BY nama").fetchall()
+    daftar_barang = conn.execute("SELECT kode, nama FROM barang WHERE aktif = 1 ORDER BY nama").fetchall()
 
     if request.method == "POST":
         tanggal = request.form["tanggal"]
@@ -162,7 +243,7 @@ def ambil_keluar(id):
 @login_required
 def keluar_tambah():
     conn = db.get_db()
-    daftar_barang = conn.execute("SELECT kode, nama FROM barang ORDER BY nama").fetchall()
+    daftar_barang = conn.execute("SELECT kode, nama FROM barang WHERE aktif = 1 ORDER BY nama").fetchall()
 
     if request.method == "POST":
         tanggal = request.form["tanggal"]
