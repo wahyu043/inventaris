@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Ubah' if data else 'Tambah' }} Barang{% endblock %}
+{% block content %}
+<h1>{{ 'Ubah' if data else 'Tambah' }} Barang</h1>
+<form method="post">
+  <p><label>Kode Barang<br>
+    {% if data %}<input value="{{ data.kode }}" disabled>
+    {% else %}<input name="kode" maxlength="100" required>{% endif %}
+  </label></p>
+  <p><label>Nama Barang<br>
+    <input name="nama" value="{{ data.nama if data else '' }}" maxlength="200" required>
+  </label></p>
+  <button>Simpan</button> <a href="{{ url_for('barang') }}">Batal</a>
+</form>
+{% endblock %}

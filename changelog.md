@@ -18,10 +18,14 @@ Format ini mengacu pada panduan [Keep a Changelog](https://keepachangelog.com/id
   - Daftar barang dengan stok 5 unit atau kurang, termasuk penanda stok habis.
 
 ### Rencana Pengembangan
-- **CRUD Master Barang**:
-  - Form penambahan, pengeditan data barang (kode & nama), serta penonaktifan barang secara langsung lewat antarmuka web tanpa bergantung pada impor Excel.
 - **Pengujian Otomatis (Automated Testing)**:
   - Implementasi pengujian unit dan integrasi (misalnya dengan `pytest` / `unittest`) untuk rute aplikasi, validasi alur transaksi, dan perhitungan stok.
+
+### Diubah
+- **CRUD Master Barang**:
+  - Menambahkan form tambah barang dan ubah nama barang melalui antarmuka web.
+  - Menambahkan aktivasi/nonaktivasi barang. Barang nonaktif tidak muncul pada pilihan transaksi baru, tetapi riwayat transaksi tetap tersimpan.
+  - Menambahkan migrasi kolom status yang tetap kompatibel dengan database lama saat menjalankan `flask init-db`.
 
 ---
 
