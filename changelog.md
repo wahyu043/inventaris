@@ -17,11 +17,11 @@ Format ini mengacu pada panduan [Keep a Changelog](https://keepachangelog.com/id
   - Metrik jumlah jenis barang, jumlah transaksi, dan total stok saat ini.
   - Daftar barang dengan stok 5 unit atau kurang, termasuk penanda stok habis.
 
-### Rencana Pengembangan
-- **Pengujian Otomatis (Automated Testing)**:
-  - Implementasi pengujian unit dan integrasi (misalnya dengan `pytest` / `unittest`) untuk rute aplikasi, validasi alur transaksi, dan perhitungan stok.
-
 ### Diubah
+- **Pengujian Otomatis**:
+  - Menambahkan pengujian `unittest` untuk autentikasi, CRUD master barang, transaksi masuk/keluar, dan perlindungan stok nonnegatif.
+  - Pengujian memakai database sementara agar tidak mengubah database lokal.
+  - Memperbaiki konteks template agar helper stok tersedia saat formulir barang keluar ditampilkan kembali setelah validasi gagal.
 - **CRUD Master Barang**:
   - Menambahkan form tambah barang dan ubah nama barang melalui antarmuka web.
   - Menambahkan aktivasi/nonaktivasi barang. Barang nonaktif tidak muncul pada pilihan transaksi baru, tetapi riwayat transaksi tetap tersimpan.
