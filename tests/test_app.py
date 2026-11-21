@@ -104,6 +104,64 @@ class InventarisTestCase(unittest.TestCase):
             self.assertEqual(db.stok_barang("BRG-1"), 0)
             self.assertIsNotNone(db.get_db().execute("SELECT id FROM transaksi WHERE id = ?", (transaction_id,)).fetchone())
 
+    def test_outgoing_edit_and_delete_update_stock_safely(self):
+        self.login()
+        with app.app_context():
+            conn = db.get_db()
+            conn.execute("INSERT INTO transaksi (tanggal, jenis, kode_barang, jumlah) VALUES (?, 'Masuk', ?, 10)",
+                         ("2026-11-21", "BRG-1"))
+            cursor = conn.execute(
+                "INSERT INTO transaksi (tanggal, jenis, kode_barang, jumlah) VALUES (?, 'Keluar', ?, 4)",
+                ("2026-11-21", "BRG-1"),
+            )
+            transaction_id = cursor.lastrowid
+            conn.commit()
+
+        response = self.client.post(f"/keluar/{transaction_id}/ubah", data={
+            "tanggal": "2026-11-21", "jumlah": "11", "no_faktur": "",
+        }, follow_redirects=True)
+        self.assertIn("jumlah melebihi stok barang".encode(), response.data)
+        with app.app_context():
+            self.assertEqual(db.stok_barang("BRG-1"), 6)
+
+        response = self.client.post(f"/keluar/{transaction_id}/ubah", data={
+            "tanggal": "2026-11-22", "jumlah": "7", "no_faktur": "F-7",
+        })
+        self.assertEqual(response.status_code, 302)
+        with app.app_context():
+            self.assertEqual(db.stok_barang("BRG-1"), 3)
+
+        self.client.post(f"/keluar/{transaction_id}/hapus")
+        with app.app_context():
+            self.assertEqual(db.stok_barang("BRG-1"), 10)
+
+    def test_inactive_barang_is_rejected_for_new_transactions(self):
+        self.login()
+        with app.app_context():
+            conn = db.get_db()
+            conn.execute("INSERT INTO transaksi (tanggal, jenis, kode_barang, jumlah) VALUES (?, 'Masuk', ?, 5)",
+                         ("2026-11-21", "BRG-1"))
+            conn.execute("UPDATE barang SET aktif = 0 WHERE kode = 'BRG-1'")
+            conn.commit()
+
+        for route, quantity in (("/masuk/tambah", "2"), ("/keluar/tambah", "1")):
+            response = self.client.post(route, data={
+                "tanggal": "2026-11-21", "kode_barang": "BRG-1", "jumlah": quantity, "no_faktur": "",
+            }, follow_redirects=True)
+            self.assertIn("Barang tidak ditemukan atau nonaktif".encode(), response.data)
+        with app.app_context():
+            self.assertEqual(db.get_db().execute("SELECT COUNT(*) FROM transaksi").fetchone()[0], 1)
+
+    def test_dashboard_shows_stock_totals(self):
+        self.login()
+        self.client.post("/masuk/tambah", data={
+            "tanggal": "2026-11-21", "kode_barang": "BRG-1", "jumlah": "3", "no_faktur": "",
+        })
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"3", response.data)
+        self.assertIn(b"Barang Uji", response.data)
+
 
 if __name__ == "__main__":
     unittest.main()

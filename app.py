@@ -150,8 +150,11 @@ def masuk_tambah():
         except ValueError:
             jumlah = 0
 
+        barang = conn.execute("SELECT 1 FROM barang WHERE kode = ? AND aktif = 1", (kode,)).fetchone()
         if not tanggal or jumlah <= 0:
             flash("Tanggal wajib diisi dan jumlah harus lebih dari 0", "error")
+        elif not barang:
+            flash("Barang tidak ditemukan atau nonaktif", "error")
         else:
             conn.execute(
                 "INSERT INTO transaksi (tanggal, jenis, kode_barang, jumlah, no_faktur) "
@@ -259,11 +262,11 @@ def keluar_tambah():
         except ValueError:
             jumlah = 0
 
-        barang = conn.execute("SELECT 1 FROM barang WHERE kode = ?", (kode,)).fetchone()
+        barang = conn.execute("SELECT 1 FROM barang WHERE kode = ? AND aktif = 1", (kode,)).fetchone()
         if not tanggal or jumlah <= 0:
             flash("Tanggal wajib diisi dan jumlah harus lebih dari 0", "error")
         elif not barang:
-            flash("Barang tidak ditemukan", "error")
+            flash("Barang tidak ditemukan atau nonaktif", "error")
         elif db.stok_barang(kode) < jumlah:
             flash("Ditolak: jumlah melebihi stok barang", "error")
         else:

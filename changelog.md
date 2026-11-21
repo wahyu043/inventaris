@@ -16,10 +16,12 @@ Format ini mengacu pada panduan [Keep a Changelog](https://keepachangelog.com/id
 - **Ringkasan Dashboard**:
   - Metrik jumlah jenis barang, jumlah transaksi, dan total stok saat ini.
   - Daftar barang dengan stok 5 unit atau kurang, termasuk penanda stok habis.
+- **Validasi Transaksi Barang Nonaktif**:
+  - Menolak transaksi masuk maupun keluar untuk barang yang sudah dinonaktifkan, termasuk permintaan langsung di luar pilihan formulir.
 
 ### Diubah
 - **Pengujian Otomatis**:
-  - Menambahkan pengujian `unittest` untuk autentikasi, CRUD master barang, transaksi masuk/keluar, dan perlindungan stok nonnegatif.
+  - Memperluas pengujian `unittest` untuk dashboard, CRUD master barang, seluruh aksi transaksi masuk/keluar, dan perlindungan stok nonnegatif.
   - Pengujian memakai database sementara agar tidak mengubah database lokal.
   - Memperbaiki konteks template agar helper stok tersedia saat formulir barang keluar ditampilkan kembali setelah validasi gagal.
 - **CRUD Master Barang**:
