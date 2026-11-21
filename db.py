@@ -1,13 +1,13 @@
 import sqlite3
 import click
-from flask import g
+from flask import current_app, g
 from werkzeug.security import generate_password_hash
 
 
 def get_db():
     # g = objek penyimpanan sementara selama 1 request
     if "db" not in g:
-        g.db = sqlite3.connect("database.db")
+        g.db = sqlite3.connect(current_app.config.get("DATABASE", "database.db"))
         g.db.row_factory = sqlite3.Row   # hasil query bisa diakses pakai nama kolom
 
         g.db.row_factory = sqlite3.Row

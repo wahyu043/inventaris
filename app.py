@@ -9,6 +9,11 @@ app.config["SECRET_KEY"] = "ganti-nanti-untuk-produksi"   # kunci penanda tangan
 db.init_app(app)
 
 
+@app.context_processor
+def inject_db_helpers():
+    return {"db": db}
+
+
 def login_required(view):
     """Decorator: halaman hanya bisa dibuka kalau sudah login."""
     @functools.wraps(view)
